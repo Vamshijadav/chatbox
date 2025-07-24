@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time Chat (MySQL)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="chat-container">
+    <h2>💬 Real-Time Chat</h2>
+    <input type="text" id="nameInput" placeholder="Enter your name" />
+    <div id="chatBox" class="chat-box"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const nameInput = document.getElementById('nameInput');
+    const messageInput = document.getElementById('messageInput');
+    const chatBox = document.getElementById('chatBox');
+
+    fetch('/messages')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(msg => {
+          appendMessage(`${msg.sender}: ${msg.message}`);
+        });
+      });
+
+    socket.on('receive_message', data => {
+      appendMessage(`${data.sender}: ${data.message}`);
+    });
+
+    function sendMessage() {
+      const name = nameInput.value.trim();
+      const message = messageInput.value.trim();
+      if (name && message) {
+        socket.emit('send_message', { sender: name, message });
+        messageInput.value = '';
+      }
+    }
+
+    function appendMessage(msg) {
+      const div = document.createElement('div');
+      div.textContent = msg;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
